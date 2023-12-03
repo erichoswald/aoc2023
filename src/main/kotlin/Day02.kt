@@ -15,13 +15,13 @@ fun main() {
     println("part2: ${part2(input)}")
 }
 
-fun part1(input: List<String>): Int =
+private fun part1(input: List<String>): Int =
     input
         .map(::parseGame)
         .filter { it.selections.all(Selection::isPossible) }
         .sumOf(Game::id)
 
-fun part2(input: List<String>): Int =
+private fun part2(input: List<String>): Int =
     input
         .map(::parseGame)
         .sumOf(Game::power)
