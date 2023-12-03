@@ -1,11 +1,5 @@
 fun main() {
-    val testInput = readInput("Day03_test")
-    check(part1(testInput) == 4361) { "${part1(testInput)} != 4361" }
-    check(part2(testInput) == 467835) { "${part2(testInput)} != 467835" }
-
-    val input = readInput("Day03")
-    println("part1: ${part1(input)}")
-    println("part2: ${part2(input)}")
+    day(3, ::part1, 4361, ::part2, 467835)
 }
 
 private fun part1(input: List<String>): Int =

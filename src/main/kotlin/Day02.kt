@@ -6,13 +6,7 @@ data class Game(val id: Int, val selections: List<Selection>)
 data class Selection(val red: Int, val green: Int, val blue: Int)
 
 fun main() {
-    val testInput = readInput("Day02_test")
-    check(part1(testInput) == 8) { "${part1(testInput)} != 8" }
-    check(part2(testInput) == 2286) { "${part2(testInput)} != 2286" }
-
-    val input = readInput("Day02")
-    println("part1: ${part1(input)}")
-    println("part2: ${part2(input)}")
+    day(2, ::part1, 8, ::part2, 2286)
 }
 
 private fun part1(input: List<String>): Int =

@@ -1,23 +1,17 @@
 fun main() {
-    fun part1(input: List<String>): Int =
-        input.sumOf { line ->
-            val digits = line.filter(Char::isDigit)
-            val firstDigit = digits.first().digitToInt()
-            val lastDigit = digits.last().digitToInt()
-            10 * firstDigit + lastDigit
-        }
-
-    fun part2(input: List<String>): Int =
-        part1(input.map(::inlineDigitWords))
-
-    // test if implementation meets criteria from the description, like:
-    val testInput = readInput("Day01_test")
-    check(part2(testInput) == 281) { "${part2(testInput)} != 281"}
-
-    val input = readInput("Day01")
-    part1(input).println()
-    part2(input).println()
+    day(1, ::part1, 142, ::part2, 281)
 }
+
+private fun part1(input: List<String>): Int =
+    input.sumOf { line ->
+        val digits = line.filter(Char::isDigit)
+        val firstDigit = digits.first().digitToInt()
+        val lastDigit = digits.last().digitToInt()
+        10 * firstDigit + lastDigit
+    }
+
+private fun part2(input: List<String>): Int =
+    part1(input.map(::inlineDigitWords))
 
 private fun inlineDigitWords(line: String): String {
     val sb = StringBuffer()
