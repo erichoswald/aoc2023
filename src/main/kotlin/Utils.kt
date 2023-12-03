@@ -1,12 +1,15 @@
 import java.math.BigInteger
 import java.security.MessageDigest
-import kotlin.io.path.Path
-import kotlin.io.path.readLines
+import kotlin.io.path.*
 
 /**
  * Reads lines from the given input txt file.
  */
-fun readInput(name: String) = Path("src/main/resources/$name.txt").readLines()
+fun readInput(name: String): List<String> =
+    Path("src/main/resources/$name.txt")
+        .takeIf { it.exists() }
+        ?.readLines()
+        ?: emptyList()
 
 /**
  * Converts string to md5 hash.
