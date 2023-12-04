@@ -15,7 +15,7 @@ class Day(
             testInput(partNo)
                 ?.let(part.compute)
                 ?.takeIf { it != part.testResult }
-                ?.let { "part1 returned $it, expected ${part.testResult}" }
+                ?.let { println("part $partNo test returned $it, expected ${part.testResult}") }
 
             if (input != null) {
                 val result = part.compute(input)
