@@ -5,3 +5,7 @@ plugins {
 repositories {
     mavenCentral()
 }
+
+dependencies {
+    implementation("io.strikt:strikt-core:0.34.1")
+}
