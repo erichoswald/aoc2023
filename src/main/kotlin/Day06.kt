@@ -5,16 +5,17 @@ private data class Record(val time: Long, val distance: Long)
 
 fun main() {
     tests()
-    day(6, ::part1, 288, ::part2, 71503)
+    Day<Long>(6)
+        .part1(288, ::part1)
+        .part2(71503, ::part2)
 }
 
-private fun part1(input: List<String>): Int =
+private fun part1(input: List<String>): Long =
     parseRecords(input)
         .map(Record::winningCombinations)
         .reduce(Long::times)
-        .toInt()
 
-private fun part2(input: List<String>): Int =
+private fun part2(input: List<String>): Long =
     input
         .map { it.replace(" ", "") }
         .let(::part1)

@@ -6,7 +6,9 @@ data class Game(val id: Int, val selections: List<Selection>)
 data class Selection(val red: Int, val green: Int, val blue: Int)
 
 fun main() {
-    day(2, ::part1, 8, ::part2, 2286)
+    Day<Int>(2)
+        .part1(8, ::part1)
+        .part2(2286, ::part2)
 }
 
 private fun part1(input: List<String>): Int =

@@ -1,14 +1,14 @@
 fun main() {
-    day(5, ::test1, 35, ::test2, 46)
+    Day<Long>(5)
+        .part1(35L) {
+            Almanac(it).findLowestLocation()
+        }
+        .part2(46L) {
+            Almanac(it).findLowestRangeLocation()
+        }
 }
 
 private val MapRegex = """(.+)-to-(.+) map:""".toRegex()
-
-private fun test1(input: List<String>): Int =
-    Almanac(input).findLowestLocation().toInt()
-
-private fun test2(input: List<String>): Int =
-    Almanac(input).findLowestRangeLocation().toInt()
 
 private class Almanac(input: List<String>) {
     private val seeds = mutableListOf<Long>()

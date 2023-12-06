@@ -1,5 +1,7 @@
 fun main() {
-    day(3, ::part1, 4361, ::part2, 467835)
+    Day<Int>(3)
+        .part1(4361, ::part1)
+        .part2(467835, ::part2)
 }
 
 private fun part1(input: List<String>): Int =

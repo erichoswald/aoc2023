@@ -1,26 +1,34 @@
 import java.nio.file.*
 import kotlin.io.path.*
 
-class Day(
-    dayOfMonth: Int,
-    private vararg val parts: Part,
-) {
+class Day<R>(dayOfMonth: Int) {
     private val dayString = "Day${dayOfMonth / 10}${dayOfMonth % 10}"
     private val dayStringTest = dayString + "_test"
+    private val input = resourcePath(dayString)?.readLines()
 
-    fun run() {
-        val input = resourcePath(dayString)?.readLines()
-        parts.forEachIndexed { index, part ->
-            val partNo = index + 1
-            testInput(partNo)
-                ?.let(part.compute)
-                ?.takeIf { it != part.testResult }
-                ?.let { println("part $partNo test returned $it, expected ${part.testResult}") }
+    fun part1(testResult: R, compute: (List<String>) -> R): Day<R> {
+        test(1, testResult, compute)
+        run(1, compute)
+        return this
+    }
 
-            if (input != null) {
-                val result = part.compute(input)
-                println("part $partNo: $result")
-            }
+    fun part2(testResult: R, compute: (List<String>) -> R): Day<R> {
+        test(2, testResult, compute)
+        run(2, compute)
+        return this
+    }
+
+    private fun test(partNo: Int, testResult: R, compute: (List<String>) -> R) {
+        testInput(partNo)
+            ?.let(compute)
+            ?.takeIf { it != testResult }
+            ?.let { println("part $partNo test returned $it, expected ${testResult}") }
+    }
+
+    private fun run(partNo: Int, compute: (List<String>) -> R) {
+        if (input != null) {
+            val result = compute(input)
+            println("part $partNo: $result")
         }
     }
 
@@ -30,14 +38,4 @@ class Day(
 
     private fun resourcePath(name: String): Path? =
         Path("src/main/resources/$name.txt").takeIf { it.exists() }
-}
-
-class Part(val compute: (List<String>) -> Int, val testResult: Int)
-
-fun day(dayOfMonth: Int, part1: (List<String>) -> Int, testResult1: Int) {
-    Day(dayOfMonth, Part(part1, testResult1)).run()
-}
-
-fun day(dayOfMonth: Int, part1: (List<String>) -> Int, testResult1: Int, part2: (List<String>) -> Int, testResult2: Int) {
-    Day(dayOfMonth, Part(part1, testResult1), Part(part2, testResult2)).run()
 }
