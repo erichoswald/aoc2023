@@ -1,7 +1,27 @@
+import strikt.api.*
+import strikt.assertions.*
+
 fun main() {
-    Day<Int>(3)
-        .part1(4361, ::part1)
-        .part2(467835, ::part2)
+    val test = listOf(
+        "467..114..",
+        "...*......",
+        "..35..633.",
+        "......#...",
+        "617*......",
+        ".....+.58.",
+        "..592.....",
+        "......755.",
+        "...$.*....",
+        ".664.598..",
+    )
+    expectThat(part1(test)).isEqualTo(4361)
+
+    val input = readInput("Day03")
+    println("part 1: ${part1(input)}")
+
+    expectThat(part2(test)).isEqualTo(467835)
+
+    println("part 2: ${part2(input)}")
 }
 
 private fun part1(input: List<String>): Int =
