@@ -1,11 +1,17 @@
+import strikt.api.*
+import strikt.assertions.*
+
 fun main() {
-    Day<Long>(5)
-        .part1(35L) {
-            Almanac(it).findLowestLocation()
-        }
-        .part2(46L) {
-            Almanac(it).findLowestRangeLocation()
-        }
+    val test = Almanac(readInput("Day05_test"))
+
+    expectThat(test.findLowestLocation()).isEqualTo(35L)
+
+    val almanac = Almanac(readInput("Day05"))
+    println("part 1: ${almanac.findLowestLocation()}")
+
+    expectThat(test.findLowestRangeLocation()).isEqualTo(46L)
+
+    println("oart 2: ${almanac.findLowestRangeLocation()}")
 }
 
 private val MapRegex = """(.+)-to-(.+) map:""".toRegex()
