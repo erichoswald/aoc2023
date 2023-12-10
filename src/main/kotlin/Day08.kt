@@ -3,27 +3,33 @@ import strikt.api.*
 import strikt.assertions.*
 
 fun main() {
-    test()
-
-    Day<Long>(8)
-        .part1(6) { lines ->
-            val instructions = parseInstructions(lines.first())
-            val map = parseMap(lines.drop(1))
-            map.countSteps(instructions)
-        }
-        .part2(6) { lines ->
-            val instructions = parseInstructions(lines.first())
-            val map = parseMap(lines.drop(1))
-            map.countSimultaneousSteps(instructions)
-        }
-}
-
-private fun test() {
     expectThat(parseMapNode("AAA = (BBB, CCC)"))
         .isEqualTo("AAA" to MapNode("BBB", "CCC"))
-
     expectThat(listOf(LEFT, RIGHT).at(3))
         .isEqualTo(RIGHT)
+
+    val test1 = listOf("AAA = (BBB, BBB)", "BBB = (AAA, ZZZ)", "ZZZ = (ZZZ, ZZZ)")
+    expectThat(parseMap(test1).countSteps(parseInstructions("LLR"))).isEqualTo(6)
+
+    val input = readInput("Day08")
+    val instructions = parseInstructions(input.first())
+    val map = parseMap(input.drop(1))
+
+    println("part 1: ${map.countSteps(instructions)}")
+
+    val test2 = listOf(
+        "11A = (11B, XXX)",
+        "11B = (XXX, 11Z)",
+        "11Z = (11B, XXX)",
+        "22A = (22B, XXX)",
+        "22B = (22C, 22C)",
+        "22C = (22Z, 22Z)",
+        "22Z = (22B, 22B)",
+        "XXX = (XXX, XXX)",
+    )
+    expectThat(parseMap(test2).countSimultaneousSteps(parseInstructions("LR"))).isEqualTo(6)
+
+    println("part 2: ${map.countSimultaneousSteps(instructions)}")
 }
 
 private const val START = "AAA"
