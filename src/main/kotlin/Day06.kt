@@ -4,10 +4,19 @@ import strikt.assertions.*
 private data class Record(val time: Long, val distance: Long)
 
 fun main() {
-    tests()
-    Day<Long>(6)
-        .part1(288, ::part1)
-        .part2(71503, ::part2)
+    val testInput = listOf("Time:      7  15   30", "Distance:  9  40  200")
+    val testRecords = listOf(Record(7, 9), Record(15, 40), Record(30, 200))
+
+    expectThat(parseRecords(testInput)).containsExactly(testRecords)
+    expectThat(Record(7, 9).winningCombinations()).isEqualTo((2L..5L).count().toLong())
+    expectThat(Record(15, 40).winningCombinations()).isEqualTo((4L..11L).count().toLong())
+
+    expectThat(part1(testInput)).isEqualTo(288)
+
+    val input = readInput("Day06")
+    println("part 1: ${part1(input)}")
+
+    println("part 2: ${part2(input)}")
 }
 
 private fun part1(input: List<String>): Long =
@@ -32,9 +41,4 @@ private fun Record.winningCombinations(): Long {
         if ((time - n) * n > distance) count++
     }
     return count
-}
-
-private fun tests() {
-    expectThat(Record(7, 9).winningCombinations()).isEqualTo((2L..5L).count().toLong())
-    expectThat(Record(15, 40).winningCombinations()).isEqualTo((4L..11L).count().toLong())
 }
