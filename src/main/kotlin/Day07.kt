@@ -1,15 +1,23 @@
+import strikt.api.*
+import strikt.assertions.*
+
 fun main() {
-    Day<Int>(7)
-        .part1(6440) { input ->
-            parseHandsWithBids(input)
-                .regularRank()
-                .score()
-        }
-        .part2(5905) { input ->
-            parseHandsWithBids(input)
-                .jokerRank()
-                .score()
-        }
+    val test = listOf(
+        "32T3K 765",
+        "T55J5 684",
+        "KK677 28",
+        "KTJJT 220",
+        "QQQJA 483",
+    )
+
+    expectThat(parseHandsWithBids(test).regularRank().score()).isEqualTo(6440)
+
+    val input = readInput("Day07")
+    println("part 1: ${parseHandsWithBids(input).regularRank().score()}")
+
+    expectThat(parseHandsWithBids(test).jokerRank().score()).isEqualTo(5905)
+
+    println("part 2: ${parseHandsWithBids(input).jokerRank().score()}")
 }
 
 private typealias Hand = List<Char>
