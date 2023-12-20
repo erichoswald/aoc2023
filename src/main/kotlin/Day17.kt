@@ -1,8 +1,11 @@
-import FlowDirection.*
+import Direction17.*
 import strikt.api.*
 import strikt.assertions.*
 
 fun main() {
+    val crucibleRange = 1..3
+    val ultraCrucibleRange = 4..10
+
     val testInput = listOf(
         "2413432311323",
         "3215453535623",
@@ -19,91 +22,98 @@ fun main() {
         "4322674655533",
     )
 
-    expectThat(minimalLoss(testInput)).isEqualTo(102)
+    expectThat(minimalLoss(testInput.toHeatLossMap(), crucibleRange)).isEqualTo(102)
 
     val input = readInput("Day17")
-    println("Part 1: ${minimalLoss(input)}")
+    println("Part 1: ${minimalLoss(input.toHeatLossMap(), crucibleRange)}")
+
+    expectThat(minimalLoss(testInput.toHeatLossMap(), ultraCrucibleRange)).isEqualTo(94)
+    val testInput2 = listOf(
+        "111111111111",
+        "999999999991",
+        "999999999991",
+        "999999999991",
+        "999999999991",
+    )
+    expectThat(minimalLoss(testInput2.toHeatLossMap(), ultraCrucibleRange)).isEqualTo(71)
+
+    println("Part 2: ${minimalLoss(input.toHeatLossMap(), ultraCrucibleRange)}")
 }
 
-typealias LossMap = Map<Pair<Int, Int>, Int>
-
-enum class FlowDirection(val rowInc: Int, val columnInc: Int) {
+private enum class Direction17(val rowInc: Int, val columnInc: Int) {
     DOWN(1, 0),
     LEFT(0, -1),
     RIGHT(0, 1),
     UP(-1, 0),
 }
 
-data class LavaFlow(val row: Int, val column: Int, val directions: List<FlowDirection>)
-data class LavaPath(val loss: Int, val path: List<FlowDirection>)
+private data class CrucibleMove(val row: Int, val column: Int, val direction: Direction17, val length: Int)
 
-private fun List<String>.toLossMap(): LossMap =
-    flatMapIndexed { row, line ->
-        line.mapIndexed { column, char ->
-            Pair(row, column) to char.digitToInt()
-        }
-    }.toMap()
+private fun List<String>.toHeatLossMap(): List<List<Int>> =
+    map { line -> line.map(Char::digitToInt) }
 
-private fun minimalLoss(input: List<String>): Int =
-    minimalLoss(input.toLossMap(), Pair(0, 0), Pair(input.lastIndex, input.last().lastIndex))
+private fun minimalLoss(heatLossMap: List<List<Int>>, lengthRange: IntRange): Int {
+    val endRow = heatLossMap.lastIndex
+    val endColumn = heatLossMap.last().lastIndex
+    val accumulatedLoss = mutableMapOf<CrucibleMove, Int>()
+    val visited = mutableSetOf<CrucibleMove>()
+    val queue = mutableListOf<CrucibleMove>()
 
-private fun minimalLoss(lossMap: LossMap, start: Pair<Int, Int>, end: Pair<Int, Int>): Int {
-    val knownLosses = mutableMapOf<LavaFlow, LavaPath>().withDefault { LavaPath(Int.MAX_VALUE, emptyList()) }
-    val visited = mutableSetOf<LavaFlow>()
-    val queue = mutableListOf<LavaFlow>()
-
-    for (direction in FlowDirection.entries) {
-        val flow = LavaFlow(end.first, end.second, listOf(direction))
-        knownLosses[flow] = LavaPath(0, emptyList())
-        queue += flow
+    for (direction in setOf(DOWN, RIGHT)) {
+        val start = CrucibleMove(0, 0, direction, lengthRange.last)
+        accumulatedLoss[start] = 0
+        queue += start
     }
 
     while (queue.isNotEmpty()) {
         val current = queue.removeFirst()
         visited += current
-        val currentPath = knownLosses.getValue(current)
-        val sources = current.directions.sources()
-            .map { LavaFlow(current.row - it.rowInc, current.column - it.columnInc, (listOf(it) + current.directions).take(3)) }
-            .filter { it.pair() in lossMap.keys }
+        val moves = current.possibleMoves(lengthRange)
+            .filter { (row, column) -> row in 0..endRow && column in 0..endColumn }
             .filterNot { it in visited }
-        for (source in sources) {
-            val loss = currentPath.loss + lossMap.getValue(current.pair())
-            val sourcePath = knownLosses[source]
-            if (sourcePath == null || loss < sourcePath.loss) {
-                knownLosses[source] = LavaPath(loss, source.directions)
+        for (move in moves) {
+            var loss = accumulatedLoss.getValue(current)
+            var (row, column) = current
+            do {
+                row += move.direction.rowInc
+                column += move.direction.columnInc
+                loss += heatLossMap[row][column]
+            } while (row != move.row || column != move.column)
+            val previousBest = accumulatedLoss[move]
+            if (previousBest == null || loss < previousBest) {
+                accumulatedLoss[move] = loss
             }
-            queue += source
+            if (move !in visited && move !in queue) {
+                queue += move
+            }
         }
-        queue.sortBy { knownLosses.getValue(it).loss }
-        while (queue.firstOrNull() in visited) {
-            queue.removeFirst()
-        }
+
+        queue.sortBy(accumulatedLoss::getValue)
     }
 
-    return knownLosses
-        .filter { (key, _) -> key.row == start.first && key.column == start.second }
+    return accumulatedLoss
+        .filter { (key, _) -> key.row == endRow && key.column == endColumn }
         .values
-        .minOf(LavaPath::loss)
+        .min()
 }
 
-private fun LavaFlow.pair(): Pair<Int, Int> =
-    Pair(row, column)
+private fun CrucibleMove.possibleMoves(lengthRange: IntRange): List<CrucibleMove> {
+    val flows = mutableListOf<CrucibleMove>()
+    if (length < lengthRange.last) {
+        flows += CrucibleMove(row + direction.rowInc, column + direction.columnInc, direction, length + 1)
+    }
+    if (length >= lengthRange.first) {
+        when (direction) {
+            DOWN, UP -> {
+                flows += CrucibleMove(row, column - lengthRange.first, LEFT, lengthRange.first)
+                flows += CrucibleMove(row, column + lengthRange.first, RIGHT, lengthRange.first)
+            }
 
-private fun List<FlowDirection>.sources(): Set<FlowDirection> {
-    val sources = mutableSetOf<FlowDirection>()
-    if (isEmpty()) {
-        for (direction in FlowDirection.entries) {
-            sources += direction
-        }
-    } else {
-        val direction = first()
-        if (size < 3 || this[1] != direction || this[2] != direction) {
-            sources += direction
-        }
-        sources += when (direction) {
-            DOWN, UP -> setOf(LEFT, RIGHT)
-            LEFT, RIGHT -> setOf(DOWN, UP)
+            LEFT, RIGHT -> {
+                flows += CrucibleMove(row - lengthRange.first, column, UP, lengthRange.first)
+                flows += CrucibleMove(row + lengthRange.first, column, DOWN, lengthRange.first)
+            }
         }
     }
-    return sources
+    return flows
 }
