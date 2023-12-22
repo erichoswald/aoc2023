@@ -29,6 +29,21 @@ fun main() {
 
     val input = readInput("Day22")
     println("Part 1: ${input.parseBlocks().settled().countCanDisintegrate()}")
+
+    expectThat(testSettled.countFallingBlocksIfDisintegrated(testSettled[0])).isEqualTo(6)
+    expectThat(testSettled.countFallingBlocksIfDisintegrated(testSettled[5])).isEqualTo(1)
+    expectThat(testSettled.countFallingBlocksIfDisintegrated()).isEqualTo(7)
+
+    val testSettled2 = listOf(
+        SandBlock(0..2, 0..0, 1..1),
+        SandBlock(0..0, 0..0, 2..2),
+        SandBlock(2..2, 0..0, 2..3),
+        SandBlock(0..0, 0..0, 3..3),
+        SandBlock(0..2, 0..0, 4..4),
+    )
+    expectThat(testSettled2.countFallingBlocksIfDisintegrated(testSettled2[0])).isEqualTo(4)
+
+    println("Part 2: ${input.parseBlocks().settled().countFallingBlocksIfDisintegrated()}")
 }
 
 private data class SandBlock(
@@ -78,6 +93,24 @@ private fun List<SandBlock>.countCanDisintegrate(): Int =
 
 private fun List<SandBlock>.canDisintegrate(block: SandBlock): Boolean =
     supportedBlocks(block).all { b -> supportingBlocks(b).size > 1 }
+
+private fun List<SandBlock>.countFallingBlocksIfDisintegrated(): Int =
+    sumOf { countFallingBlocksIfDisintegrated(it) }
+
+private fun List<SandBlock>.countFallingBlocksIfDisintegrated(block: SandBlock): Int =
+    fallingBlocks(setOf(block)).size - 1
+
+private tailrec fun List<SandBlock>.fallingBlocks(blocks: Set<SandBlock>): Set<SandBlock> {
+    val supportedBlocks = blocks.flatMap(::supportedBlocks).toSet()
+    val fallingBlocks = supportedBlocks.filter { supported ->
+        (supportingBlocks(supported) - blocks).isEmpty()
+    }
+    val newBlocks = blocks + fallingBlocks
+    return when {
+        newBlocks == blocks -> newBlocks
+        else -> fallingBlocks(newBlocks)
+    }
+}
 
 private fun List<SandBlock>.supportedBlocks(block: SandBlock): List<SandBlock> =
     filter { supported ->
