@@ -1,23 +1,6 @@
 import strikt.api.*
 import strikt.assertions.*
 
-/*
-Part 2: With so many steps, it's not feasible to track individual locations with each step.
-The number of reachable spots increases with each step (assuming the starting spot is not within an area bounded by rocks).
-
-Observations from analyzing the input file:
-
-The border rows and columns have no rocks.
-The input has a clear path from the start in the middle to its borders and its corners.
-The 65th step reaches the boundaries of the original plot square in the middle of the boundary, the 66th step crosses the border.
-The 130th step reaches the corners of the original plot square, the 132nd step reaches the diagonally opposite corner.
-Each horizontally or vertically adjacent tile is populated in the same way, starting in the middle of the boundary closest to the starting tile.
-Each diagonally adjacent tile is also populated in the same way, starting at the corner closest to the starting tile.
-Every (65+k*131+1)th step, a new E (N, S, W) tile starts the same cycle, so there are (steps-65)/131 tiles in each direction.
-Every (k*131+1)th step, a new NE (NW, SE, SW) tile starts the same cycle, so there (steps/131) tiles in each diagonal.
-26501365 = 202300 * 131 + 65
-*/
-
 fun main() {
     val testInput = listOf(
         "...........",
@@ -40,54 +23,83 @@ fun main() {
     expectThat(testPlot.run(6).countOccupied()).isEqualTo(16)
 
     val input = readInput("Day21")
-    println("Part 1: ${input.parsePlot().run(64).countOccupied()}")
+    val plot = input.parsePlot()
+    println("Part 1: ${plot.run(64).countOccupied()}")
 
-//    input.parsePlot().simulate(65 + 131*4)
     /*
-        Running the simulation yields:
-        65: 3821
-        65 + 131: 34234
-        65 + 131*2: 94963
-        65 + 131*3: 186008
-        65 + 131*4: 307369
+        Part 2: With so many steps, it's not feasible to track individual locations with each step.
 
-        Assumption: Number of reachable spots grows as a quadratic function (expanding in two dimensions),
-        at least each time we reach the border of the next set of tiles as the step number implies.
-
-        a*x^2 + b*x + c = n
-
-        a*65*65 + b*65 + c = 3821
-        c = 3821 - 65*b - 4225*a
-
-        a*(65 + 131)*(65 + 131) + b*(65 + 131) + c = 34234
-        a*196*196 + b*196 + 3821 - 65*b - 4225*a = 34234
-        a*(196*196 - 4225) + b*(196 - 65) = 34234 - 3821
-        a*34191 + b*131 = 30413
-        b = (30413 - a*34191) / 131
-
-        a*(65 + 131*2)(65 + 131*2) + b*(65 + 131*2) + c = 94963
-        a*106929 + b*327 + c = 94963
-        a*106929 + ((30413 - a*34191) / 131)*327 + 3821 - 65*((30413 - a*34191) / 131) - a*4225 = 94963
-        a*106929 + 327*30413/131 - a*327*34191/131 + 3821 - 65*30413/131 + a*65*34191/131 - a*4225 = 94963
-        a*(106929 - 327*34191/131 + 65*34191/131 - 4225) = 94963 - 327*30413/131 - 3821 + 65*30413/131
-        a = (91142 - 327*30413/131 + 65*30413/131) / (106929 - 327*34191/131 + 65*34191/131 - 4225)
-        a = (91142 - 262*30413/131) / (102704 - 262*34191/131)
-        a = (91142 - 2*30413) / (102704 - 2*34191) = (91142 - 60826) / (102704 - 68382) = 30316 / 34322
-     */
-    for (tiles in 0L..4L) {
-        println("$tiles: ${compute(tiles)}")
+        Observations from analyzing the input file:
+        - The start is in the center.
+        - The border rows and columns have no rocks.
+        - The input has a clear path from the start in the middle to its borders and its corners.
+    */
+    val center = input.size / 2
+    expect {
+        that(plot.size).isEqualTo(plot.first().size) // Plot is square.
+        that(plot[center][center]).isEqualTo(START)
+        that(plot[center].none { it == ROCK }) // There are no rocks in the center row.
+        that(plot.map { it[center] }.none { it == ROCK }) // There are no rocks in the center column.
+        that(plot.first().none { it == ROCK }) // There are no rocks in the borders.
+        that(plot.last().none { it == ROCK })
+        that(plot.map(List<Char>::first).none { it == ROCK })
+        that(plot.map(List<Char>::last).none { it == ROCK })
     }
 
-    println("Part 2: ${compute(202300)}")
-}
+    /*
+        The 65th step reaches the boundaries of the original plot square in the middle of the boundary, the 66th step crosses the border.
+        The 130th step reaches the corners of the original plot square, the 132nd step reaches the diagonally opposite corner.
+        Each horizontally or vertically adjacent tile is populated in the same way, starting in the middle of the boundary closest to the starting tile.
+        Each diagonally adjacent tile is also populated in the same way, starting at the corner closest to the starting tile.
+        Every (65+k*131+1)th step, a new E (N, S, W) tile starts the same cycle, so there are (steps-65)/131 tiles in each direction.
+        Every (k*131+1)th step, a new NE (NW, SE, SW) tile starts the same cycle, so there (steps/131) tiles in each diagonal.
 
-private const val A = 30316.0 / 34322.0
-private const val B = (30413.0 - A*34191.0) / 131.0
-private const val C = 3821.0 - 65.0*B - 4225.0*A
+        26501365 = 202300 * 131 + 65, i.e. the required number of steps fills 202300 tiles in horizontal and vertical directions.
+        Instead of repeating _s_ steps, we can fill _t_ full tiles so that _s = 131t + 65_
+    */
+    val steps = 26501365
+    expectThat((steps - center) % plot.size).isEqualTo(0) // Chosen Steps fill full tiles in all directions.
 
-private fun compute(tiles: Long): Long {
-    val steps = (65L + 131L * tiles).toDouble()
-    return Math.round(steps * steps * A + steps * B + C)
+    /*
+        Assumption: the number of reachable spots whenever the "horizon" reaches the outer border of a tile is a function of the number of tiles.
+        Because the horizon spreads in two dimensions, assume it is a quadratic function.
+
+        By running the algorithm for the first few number of tiles, we can get known results, which we can then use to fit
+        the quadratic function to those points and check if the function works for other data points as well.
+    */
+    val simulated = (0..4).map(plot::simulate)
+    expect {
+        that(simulated[0]).isEqualTo(3821)
+        that(simulated[1]).isEqualTo(34234)
+        that(simulated[2]).isEqualTo(94963)
+        that(simulated[3]).isEqualTo(186008)
+        that(simulated[4]).isEqualTo(307369)
+    }
+
+    /*
+        Determine coefficients a, b, and c for a*x^2 + b*x + c = spots where x is the number of tiles and spots the simulated number of reachable spots.
+        a * 0^2 + b * 0 + c = simulated[0]
+        a * 1^2 + b * 1 + c = simulated[1]
+        b = simulated[1] - c - a
+        a * 2^2 + b * 2 + c = simulated[2]
+        a * 4 + (simulated[1] - c - a) * 2 = simulated[2] - c
+        a * (4 - 2) = simulated[2] - c - simulated[1] * 2 + c * 2
+        a = (simulated[2] - simulated[1] * 2 + c) / 2
+     */
+    val c = simulated[0]
+    val a = (simulated[2] - simulated[1] * 2 + c) / 2
+    val b = simulated[1] - c - a
+
+    fun f(tiles: Long): Long =
+        a * tiles * tiles + b * tiles + c
+
+    expect {
+        that(f(3)).isEqualTo(simulated[3])
+        that(f(4)).isEqualTo(simulated[4])
+    }
+
+    val tiles = (steps - center) / plot.size
+    println("Part 2: ${f(tiles.toLong())}")
 }
 
 private const val GARDEN = '.'
@@ -116,24 +128,23 @@ private fun List<List<Char>>.step(): List<List<Char>> =
         }
     }
 
-private fun List<List<Char>>.simulate(steps: Int) {
-    var plot = explode(steps)
+private fun List<List<Char>>.simulate(tiles: Int): Long {
+    var plot = expand(tiles)
+    val steps = size / 2 + tiles * size
     for (step in 1..steps) {
         plot = plot.step()
     }
-    println("$steps: ${plot.countOccupied()}")
+    return plot.countOccupied().toLong()
 }
 
-private fun List<List<Char>>.explode(steps: Int): List<List<Char>> {
-    expectThat(size).isEqualTo(131)
-    val tiles = (steps - 65) / 131
-    val allocations = (2 * tiles + 1) * 131
+private fun List<List<Char>>.expand(tiles: Int): List<List<Char>> {
+    val allocations = (2 * tiles + 1) * size
     val plot = List(allocations) { row ->
         MutableList(allocations) { column ->
-            this[row % 131][column % 131].takeIf { it == ROCK } ?: GARDEN
+            this[row % size][column % size].takeIf { it == ROCK } ?: GARDEN
         }
     }
-    val center = tiles * 131 + 65
+    val center = tiles * size + size / 2
     plot[center][center] = 'O'
     return plot
 }
